@@ -71,13 +71,16 @@ class Message(object):
         if '*' in cfg.forwarded_allow_ips:
             secure_scheme_headers = cfg.secure_scheme_headers
         elif isinstance(self.unreader, SocketUnreader):
-            remote_addr = self.unreader.sock.getpeername()
-            if isinstance(remote_addr, tuple):
-                remote_host = remote_addr[0]
-                if remote_host in cfg.forwarded_allow_ips:
+            try:
+                remote_addr = self.unreader.sock.getpeername()
+                if isinstance(remote_addr, tuple):
+                    remote_host = remote_addr[0]
+                    if remote_host in cfg.forwarded_allow_ips:
+                        secure_scheme_headers = cfg.secure_scheme_headers
+                elif isinstance(remote_addr, string_types):
                     secure_scheme_headers = cfg.secure_scheme_headers
-            elif isinstance(remote_addr, string_types):
-                secure_scheme_headers = cfg.secure_scheme_headers
+            except OSError:
+                raise NoMoreData()
 
         # Parse headers into key/value pairs paying attention
         # to continuation lines.
